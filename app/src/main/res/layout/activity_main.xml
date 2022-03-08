@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:translationY="40dp"
+    tools:context=".MainActivity">
+
+
+    <EditText
+        android:id="@+id/etIP"
+        android:layout_width="295dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:hint="Direccion IP"
+        android:minHeight="48dp"
+        android:textAlignment="center"
+        tools:layout_editor_absoluteX="20dp"
+        tools:layout_editor_absoluteY="70dp" />
+
+    <EditText
+        android:id="@+id/etPuerto"
+        android:layout_width="295dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:hint="Puerto"
+        android:minHeight="48dp"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteY="139dp"
+        android:autofillHints="" />
+
+
+    <EditText
+        android:id="@+id/ubicacion"
+        android:layout_width="296dp"
+        android:layout_height="122dp"
+        android:layout_gravity="center"
+        android:hint="Ubicación"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="17dp"
+        tools:layout_editor_absoluteY="205dp" />
+
+    <Button
+        android:id="@+id/bt_location"
+        android:layout_width="151dp"
+        android:layout_height="67dp"
+        android:layout_gravity="center"
+        android:backgroundTint="#E81111"
+        android:text="Coordenadas"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="29dp"
+        tools:layout_editor_absoluteY="291dp" />
+
+    <Button
+        android:id="@+id/send"
+        android:layout_width="151dp"
+        android:layout_height="67dp"
+        android:layout_gravity="center"
+        android:backgroundTint="#00D4A3"
+        android:text=" Enviar coordenadas"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="227dp" />
+
+    <Button
+        android:id="@+id/udp"
+        android:layout_width="152dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="UDP" />
+
+
+</LinearLayout>
