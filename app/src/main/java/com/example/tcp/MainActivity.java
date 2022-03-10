@@ -12,6 +12,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 
 import android.util.Log;
+import android.widget.Switch;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -41,27 +43,30 @@ public class MainActivity extends AppCompatActivity {
 
 
     private EditText etIP, port, Mensaje;
-    private Button Enviar, Localizar, UDP;
+    private Button Localizar, UDP;
     private String mess;
+    private Switch Switch;
+    private Handler loop = new Handler();
     FusedLocationProviderClient fusedLocationProviderClient;
     Socket s;
     PrintWriter pw;
     DatagramSocket udpSocket;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         Mensaje = findViewById(R.id.ubicacion);
-        Enviar = findViewById(R.id.send);
         Localizar = findViewById(R.id.bt_location);
         etIP = findViewById(R.id.etIP);
         port = findViewById(R.id.etPuerto);
         UDP = findViewById(R.id.udp);
+        Switch = findViewById(R.id.switchE);
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         Localizar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -75,39 +80,6 @@ public class MainActivity extends AppCompatActivity {
                             {Manifest.permission.ACCESS_FINE_LOCATION}, 44);
                 }
             }
-        });
-
-        Enviar.setOnClickListener(new View.OnClickListener() {
-
-
-            @Override
-            public void onClick(View view) {
-
-                mess = Mensaje.getText().toString();
-                int puerto = Integer.parseInt(port.getText().toString());
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            s = new Socket(etIP.getText().toString(), puerto);
-                            pw = new PrintWriter(s.getOutputStream());
-                            pw.write(mess);
-                            pw.flush();
-                            s.close();
-
-
-                        } catch (IOException e) {
-                            e.printStackTrace();
-
-                        }
-
-
-                    }
-                }
-                ).start();
-
-            }
-
         });
 
         UDP.setOnClickListener(new View.OnClickListener() {
@@ -139,8 +111,73 @@ public class MainActivity extends AppCompatActivity {
 
 
         });
-
     }
+    public void onclick(View view) {
+
+        if(view.getId()==R.id.switchE) {
+            if(Switch.isChecked()) {
+                ubicacion.run();
+                enviar.run();
+            }else {
+                loop.removeCallbacks(ubicacion);
+                loop.removeCallbacks(enviar);
+            }
+        }
+    }
+        private Runnable ubicacion = new Runnable() {
+
+            @Override
+            public void run() {
+                if (ActivityCompat.checkSelfPermission(MainActivity.this,
+                        Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                    getlocation();
+                } else {
+
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]
+                            {Manifest.permission.ACCESS_FINE_LOCATION}, 44);
+                }
+                loop.postDelayed(this,5000);
+            }
+        };
+
+
+        private Runnable enviar = new Runnable() {
+
+            @Override
+            public void run(){;
+                int puerto = Integer.parseInt(port.getText().toString());
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mess = Mensaje.getText().toString();
+                        try {
+                            udpSocket = new DatagramSocket(puerto);
+                            InetAddress serverAddr = InetAddress.getByName(etIP.getText().toString());
+                            byte[] buf = (mess).getBytes();
+                            DatagramPacket packet = new DatagramPacket(buf, buf.length, serverAddr, puerto);
+                            udpSocket.send(packet);
+                            udpSocket.close();
+                        } catch (SocketException e) {
+                            //Log.e("Udp:", "Socket Error:", e);
+                        } catch (IOException e) {
+                            //Log.e("Udp Send:", "IO Error:", e);
+                        }
+
+                    }
+                }
+                ).start();
+                loop.postDelayed(this,5000);
+            }
+
+
+        };
+
+
+
+
+
+
 
     private void getlocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=

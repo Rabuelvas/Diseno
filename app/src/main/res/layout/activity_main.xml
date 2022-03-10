@@ -53,27 +53,27 @@
         android:layout_height="67dp"
         android:layout_gravity="center"
         android:backgroundTint="#E81111"
-        android:text="Coordenadas"
+        android:text="Obtener coordenadas"
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="29dp"
         tools:layout_editor_absoluteY="291dp" />
 
     <Button
-        android:id="@+id/send"
+        android:id="@+id/udp"
         android:layout_width="151dp"
         android:layout_height="67dp"
         android:layout_gravity="center"
-        android:backgroundTint="#00D4A3"
-        android:text=" Enviar coordenadas"
-        tools:ignore="MissingConstraints"
-        tools:layout_editor_absoluteX="227dp" />
+        android:text="UDP" />
 
-    <Button
-        android:id="@+id/udp"
-        android:layout_width="152dp"
+    <Switch
+        android:id="@+id/switchE"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="UDP" />
+        android:minHeight="48dp"
+        android:onClick="onclick"
+        android:text="Enviar automáticamente"
+        android:textSize="16sp" />
 
 
 </LinearLayout>
