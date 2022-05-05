@@ -8,6 +8,11 @@ import androidx.core.content.ContextCompat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -42,27 +47,32 @@ import java.util.List;
 import java.util.Locale;
 
 import android.widget.Switch;
+import android.widget.Toast;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity {
 
 
     private EditText etIP, port, Mensaje;
-    private Button Localizar, UDP;
+    private Button Localizar, UDP, Boton;
     private String mess;
     private Switch Switch, Switch2;
+    private int REQUEST_ENABLE_BT = 1234;
+
 
     FusedLocationProviderClient fusedLocationProviderClient;
     LocationRequest locationRequest;
     private final Handler loop = new Handler();
-    Socket s;
-    PrintWriter pw;
+    private Bluetooth connection = new Bluetooth();
     DatagramSocket udpSocket;
+    BluetoothSocket socket;
+    Bluetooth.ConnectedThread thread;
 
     LocationCallback locationCallback = new LocationCallback() {
         @Override
@@ -127,6 +137,61 @@ public class MainActivity extends AppCompatActivity {
         UDP = findViewById(R.id.udp);
         Switch = findViewById(R.id.switchE);
         Switch2 = findViewById(R.id.switchIns);
+        Boton = findViewById(R.id.bluetooth);
+
+        Boton.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("MissingPermission")
+            @Override
+            public void onClick(View view) {
+                BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                String MAC = null;
+                if (bluetoothAdapter == null) {
+                    // Device doesn't support Bluetooth
+                }else {
+                    if (!bluetoothAdapter.isEnabled()) {
+                        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                    }
+                    Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+
+                    if (pairedDevices.size() > 0) {
+                        // There are paired devices. Get the name and address of each paired device.
+                        for (BluetoothDevice device : pairedDevices) {
+                            String deviceName = device.getName();
+                            String deviceHardwareAddress = device.getAddress(); // MAC address
+                            Log.i("Device name", deviceName);
+                            if (deviceName.equals("Alex's ESP32") ) {
+                                MAC = deviceHardwareAddress;
+                            }
+                            Log.i("MAC", MAC);
+                        }
+                    }
+                    Toast.makeText(MainActivity.this,"MAC: "+MAC+"\n size: "+pairedDevices.size(),Toast.LENGTH_LONG);
+                    if (MAC != null) {
+                        BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(MAC);
+                        Log.i("Device", bluetoothDevice.toString());
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                try {
+
+                                    socket = connection.connect(bluetoothDevice);
+                                    Log.i("Connected", "" + socket.isConnected());
+                                    thread = connection.new ConnectedThread(socket);
+                                    thread.start();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+
+                                }
+                            }
+                        }).start();
+                    }else{
+                        Toast.makeText(getBaseContext(),"error",Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
 
         Localizar.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -340,20 +405,17 @@ public class MainActivity extends AppCompatActivity {
                         InetAddress serverInst2 = InetAddress.getByName("34.239.66.120");
                         InetAddress serverInst3 = InetAddress.getByName("44.198.119.172");
                         InetAddress serverInst4 = InetAddress.getByName("3.225.130.220");
-                        InetAddress serverInst5 = InetAddress.getByName("10.20.30.47");
 
                         byte[] buf = (mess).getBytes();
                         DatagramPacket packet = new DatagramPacket(buf, buf.length, serverInst, 3020);
                         DatagramPacket packet2 = new DatagramPacket(buf, buf.length, serverInst2, 3020);
                         DatagramPacket packet3 = new DatagramPacket(buf, buf.length, serverInst3, 3020);
                         DatagramPacket packet4 = new DatagramPacket(buf, buf.length, serverInst4, 3020);
-                        DatagramPacket packet5 = new DatagramPacket(buf, buf.length, serverInst5,3020);
 
                         udpSocket.send(packet);
                         udpSocket.send(packet2);
                         udpSocket.send(packet3);
                         udpSocket.send(packet4);
-                        udpSocket.send(packet5);
 
                         udpSocket.close();
                     } catch (SocketException e) {
@@ -409,7 +471,7 @@ public class MainActivity extends AppCompatActivity {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         String strDate = sdf.format(c.getTime());
 
-                        Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate);
+                        Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate+"\nDistancia: ");
 
 
                     } catch (IOException e) {
