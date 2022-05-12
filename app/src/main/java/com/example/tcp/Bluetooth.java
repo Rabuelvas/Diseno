@@ -24,12 +24,8 @@ public class Bluetooth {
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private Handler handler;
 
-    private interface MessageConstants {
-        public static final int MESSAGE_READ = 0;
-        public static final int MESSAGE_WRITE = 1;
-        public static final int MESSAGE_TOAST = 2;
-
-        // ... (Add other message types here as needed.)
+    public Bluetooth(Handler h){
+        this.handler = h;
     }
 
     public class ConnectedThread extends Thread {
@@ -67,50 +63,25 @@ public class Bluetooth {
             // Keep listening to the InputStream until an exception occurs.
             while (true) {
 
-                Log.i("Start", "Start");
                 try {
                     // Read from the InputStream.
                     numBytes = mmInStream.read(mmBuffer);
-                    // Send the obtained bytes to the UI activity.
-                    Log.i("Read", "Read");
-                    Message readMsg = handler.obtainMessage(
-                            MessageConstants.MESSAGE_READ, numBytes, -1,
-                            mmBuffer);
 
                     byte[] buffer2 = new byte[numBytes];
 
-                    for (int i = 0; i < numBytes; i++)
+                    for (int i = 0; i < numBytes; i++) {
                         buffer2[i] = mmBuffer[i];
-
-                    Log.i("Message", "" + new String(buffer2));
-                    readMsg.sendToTarget();
+                    }
+                    // Send the obtained bytes to the UI activity.
+                    final Message msg = new Message();
+                    final Bundle b = new Bundle();
+                    b.putString("KEY", new String(buffer2));
+                    msg.setData(b);
+                    handler.sendMessage(msg);
                 } catch (IOException e) {
                     Log.d(TAG, "Input stream was disconnected", e);
                     break;
                 }
-            }
-        }
-
-        // Call this from the main activity to send data to the remote device.
-        public void write(byte[] bytes) {
-            try {
-                mmOutStream.write(bytes);
-
-                // Share the sent message with the UI activity.
-                Message writtenMsg = handler.obtainMessage(
-                        MessageConstants.MESSAGE_WRITE, -1, -1, mmBuffer);
-                writtenMsg.sendToTarget();
-            } catch (IOException e) {
-                Log.e(TAG, "Error occurred when sending data", e);
-
-                // Send a failure message back to the activity.
-                Message writeErrorMsg =
-                        handler.obtainMessage(MessageConstants.MESSAGE_TOAST);
-                Bundle bundle = new Bundle();
-                bundle.putString("toast",
-                        "Couldn't send data to the other device");
-                writeErrorMsg.setData(bundle);
-                handler.sendMessage(writeErrorMsg);
             }
         }
 
@@ -149,6 +120,7 @@ public class Bluetooth {
             }
         }
         return sock;
+
     }
 
 }

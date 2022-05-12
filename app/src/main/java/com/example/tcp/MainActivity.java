@@ -21,6 +21,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -64,12 +65,29 @@ public class MainActivity extends AppCompatActivity {
     private String mess;
     private Switch Switch, Switch2;
     private int REQUEST_ENABLE_BT = 1234;
+    private String distancia = null;
+    private Boolean connected = false;
 
 
     FusedLocationProviderClient fusedLocationProviderClient;
     LocationRequest locationRequest;
-    private final Handler loop = new Handler();
-    private Bluetooth connection = new Bluetooth();
+    private final Handler loop = new Handler() {
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            Bundle b = msg.getData();
+            String value = b.getString("KEY");
+
+            try {
+                Log.i("distancia", Float.toString(Float.parseFloat(value)));
+                distancia = value;
+            }catch (Exception e){
+
+            }
+
+        }
+    };
+
+    private Bluetooth connection = new Bluetooth(loop);
     DatagramSocket udpSocket;
     BluetoothSocket socket;
     Bluetooth.ConnectedThread thread;
@@ -104,8 +122,14 @@ public class MainActivity extends AppCompatActivity {
                     Calendar c = Calendar.getInstance();
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     String strDate = sdf.format(c.getTime());
+                    if(socket!=null){
+                        if(socket.isConnected()) {
+                            Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate + "\nDistancia:" + distancia);
+                        }
+                    }else{
+                        Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate);
+                    }
 
-                    Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate);
 
 
                 } catch (IOException e) {
@@ -143,54 +167,66 @@ public class MainActivity extends AppCompatActivity {
             @SuppressLint("MissingPermission")
             @Override
             public void onClick(View view) {
-                BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                String MAC = null;
-                if (bluetoothAdapter == null) {
-                    // Device doesn't support Bluetooth
-                }else {
-                    if (!bluetoothAdapter.isEnabled()) {
-                        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-                    }
-                    Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+                if(!connected) {
+                    BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                    String MAC = null;
+                    if (bluetoothAdapter == null) {
+                        // Device doesn't support Bluetooth
+                    } else {
+                        if (!bluetoothAdapter.isEnabled()) {
+                            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                        }
+                        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
 
-                    if (pairedDevices.size() > 0) {
-                        // There are paired devices. Get the name and address of each paired device.
-                        for (BluetoothDevice device : pairedDevices) {
-                            String deviceName = device.getName();
-                            String deviceHardwareAddress = device.getAddress(); // MAC address
-                            Log.i("Device name", deviceName);
-                            if (deviceName.equals("Alex's ESP32") ) {
-                                MAC = deviceHardwareAddress;
+                        if (pairedDevices.size() > 0) {
+                            // There are paired devices. Get the name and address of each paired device.
+                            for (BluetoothDevice device : pairedDevices) {
+                                String deviceName = device.getName();
+                                String deviceHardwareAddress = device.getAddress(); // MAC address
+                                Log.i("Device name", deviceName);
+                                if (deviceName.equals("Alex's ESP32")) {
+                                    MAC = deviceHardwareAddress;
+                                    Log.i("MAC", MAC);
+                                }
+
                             }
-                            Log.i("MAC", MAC);
+                        }
+
+                        if (MAC != null) {
+                            BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(MAC);
+                            Log.i("Device", bluetoothDevice.toString());
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+
+                                    try {
+
+                                        socket = connection.connect(bluetoothDevice);
+                                        Log.i("Connected", "" + socket.isConnected());
+                                        thread = connection.new ConnectedThread(socket);
+                                        thread.start();
+                                        connected = true;
+
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+
+                                    }
+                                }
+                            }).start();
+                            Toast.makeText(getBaseContext(),"Connected",Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getBaseContext(), "Error", Toast.LENGTH_SHORT).show();
                         }
                     }
-                    Toast.makeText(MainActivity.this,"MAC: "+MAC+"\n size: "+pairedDevices.size(),Toast.LENGTH_LONG);
-                    if (MAC != null) {
-                        BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(MAC);
-                        Log.i("Device", bluetoothDevice.toString());
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-
-                                try {
-
-                                    socket = connection.connect(bluetoothDevice);
-                                    Log.i("Connected", "" + socket.isConnected());
-                                    thread = connection.new ConnectedThread(socket);
-                                    thread.start();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-
-                                }
-                            }
-                        }).start();
-                    }else{
-                        Toast.makeText(getBaseContext(),"error",Toast.LENGTH_SHORT).show();
-                    }
+                }else{
+                    thread.cancel();
+                    connected=false;
+                    distancia=null;
+                    Toast.makeText(getBaseContext(),"Disconnected",Toast.LENGTH_SHORT).show();
                 }
             }
+
         });
 
         Localizar.setOnClickListener(new View.OnClickListener() {
@@ -328,12 +364,13 @@ public class MainActivity extends AppCompatActivity {
                     start();
                     enviar.run();
 
-                } else {
+                    } else {
                     enable();
                 }
-            } else {
+                } else {
                 fusedLocationProviderClient.removeLocationUpdates(locationCallback);
                 loop.removeCallbacks(enviar);
+
             }
         }
 
@@ -471,8 +508,11 @@ public class MainActivity extends AppCompatActivity {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         String strDate = sdf.format(c.getTime());
 
-                        Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate+"\nDistancia: ");
-
+                        if(distancia!=null){
+                                Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate + "\nDistancia:" + distancia);
+                        }else{
+                            Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate);
+                        }
 
                     } catch (IOException e) {
                         e.printStackTrace();
