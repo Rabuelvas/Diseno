@@ -132,10 +132,10 @@ public class MainActivity extends AppCompatActivity {
                     String strDate = sdf.format(c.getTime());
                     if(socket!=null){
                         if(socket.isConnected()) {
-                            Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate + "\nDistancia:" + distancia+"\nID :"+item);
+                            Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate + "\nDistancia: " + distancia+"\nID: "+item);
                         }
                     }else{
-                        Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate+"\nID :"+item);
+                        Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate+"\nID: "+item);
                     }
 
 
@@ -531,9 +531,9 @@ public class MainActivity extends AppCompatActivity {
                         String strDate = sdf.format(c.getTime());
 
                         if(distancia!=null){
-                                Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate + "\nDistancia:" + distancia+"\nID :"+item);
+                                Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate + "\nDistancia:" + distancia+"\nID: "+item);
                         }else{
-                            Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate+"\nID :"+item);
+                            Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate+"\nID: "+item);
                         }
 
                     } catch (IOException e) {
