@@ -45,14 +45,31 @@
         android:textSize="16sp"
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="17dp"
-        tools:layout_editor_absoluteY="205dp" />
+        tools:layout_editor_absoluteY="205dp"
+        android:enabled="false"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="296dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="53dp"
+        android:hint="@string/select"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+
+        <AutoCompleteTextView
+            android:id="@+id/auto_complete_txt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"
+            android:hint="Seleccionar taxi"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
 
     <Button
         android:id="@+id/coordenadas"
         android:layout_width="151dp"
         android:layout_height="67dp"
         android:layout_gravity="center"
-        android:backgroundTint="#E81111"
+        android:backgroundTint="#393E46"
         android:text="Obtener coordenadas"
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="29dp"
@@ -63,14 +80,16 @@
         android:layout_width="151dp"
         android:layout_height="67dp"
         android:layout_gravity="center"
-        android:text="UDP" />
+        android:text="UDP"
+        android:backgroundTint="#00ADB5"/>
 
     <Button
         android:id="@+id/bluetooth"
         android:layout_width="148dp"
         android:layout_height="67dp"
         android:layout_gravity="center"
-        android:text="Bluetooth" />
+        android:text="Bluetooth"
+        android:backgroundTint="#2A2550"/>
 
     <Switch
         android:id="@+id/switchE"

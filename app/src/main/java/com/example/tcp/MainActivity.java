@@ -24,6 +24,9 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -67,7 +70,12 @@ public class MainActivity extends AppCompatActivity {
     private int REQUEST_ENABLE_BT = 1234;
     private String distancia = null;
     private Boolean connected = false;
+    String item;
+    String[] items = {"ABC123","DEF456"};
 
+    AutoCompleteTextView autoCompleteTxt;
+
+    ArrayAdapter<String> adapterItems;
 
     FusedLocationProviderClient fusedLocationProviderClient;
     LocationRequest locationRequest;
@@ -124,10 +132,10 @@ public class MainActivity extends AppCompatActivity {
                     String strDate = sdf.format(c.getTime());
                     if(socket!=null){
                         if(socket.isConnected()) {
-                            Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate + "\nDistancia:" + distancia);
+                            Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate + "\nDistancia:" + distancia+"\nID :"+item);
                         }
                     }else{
-                        Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate);
+                        Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate+"\nID :"+item);
                     }
 
 
@@ -150,8 +158,8 @@ public class MainActivity extends AppCompatActivity {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         locationRequest = LocationRequest.create();
-        locationRequest.setInterval(5000);
-        locationRequest.setFastestInterval(5000);
+        locationRequest.setInterval(2000);
+        locationRequest.setFastestInterval(2000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         Mensaje = findViewById(R.id.ubicacion);
@@ -162,6 +170,8 @@ public class MainActivity extends AppCompatActivity {
         Switch = findViewById(R.id.switchE);
         Switch2 = findViewById(R.id.switchIns);
         Boton = findViewById(R.id.bluetooth);
+
+
 
         Boton.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("MissingPermission")
@@ -272,6 +282,18 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
+        });
+
+        autoCompleteTxt = findViewById(R.id.auto_complete_txt);
+        adapterItems = new ArrayAdapter<String>(this,R.layout.list_item,items);
+        autoCompleteTxt.setAdapter(adapterItems);
+
+        autoCompleteTxt.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            @Override
+            public void onItemClick(AdapterView<?>parent,View view, int position, long id ){
+                item = parent.getItemAtPosition(position).toString();
+
+            }
         });
     }
 
@@ -420,7 +442,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             ).start();
-            loop.postDelayed(this, 5000);
+            loop.postDelayed(this, 3000);
         }
 
 
@@ -438,7 +460,7 @@ public class MainActivity extends AppCompatActivity {
                     mess = Mensaje.getText().toString();
                     try {
                         udpSocket = new DatagramSocket(3020);
-                        InetAddress serverInst = InetAddress.getByName("3.213.123.18");
+                        InetAddress serverInst = InetAddress.getByName("3.213.123.181");
                         InetAddress serverInst2 = InetAddress.getByName("34.239.66.120");
                         InetAddress serverInst3 = InetAddress.getByName("44.198.119.172");
                         InetAddress serverInst4 = InetAddress.getByName("3.225.130.220");
@@ -464,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             ).start();
-            loop.postDelayed(this, 5000);
+            loop.postDelayed(this, 3000);
         }
 
 
@@ -509,9 +531,9 @@ public class MainActivity extends AppCompatActivity {
                         String strDate = sdf.format(c.getTime());
 
                         if(distancia!=null){
-                                Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate + "\nDistancia:" + distancia);
+                                Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate + "\nDistancia:" + distancia+"\nID :"+item);
                         }else{
-                            Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate);
+                            Mensaje.setText("Latitud: " + latitud + "\nLongitud: " + longitud + "\nTimeStamp :" + strDate+"\nID :"+item);
                         }
 
                     } catch (IOException e) {
